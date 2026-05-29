@@ -1,0 +1,333 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>handoff — the doc your next agent opens before it works</title>
+<meta name="description" content="A Claude Code skill for long-running tasks: compact a session into one structured markdown file so a fresh-context agent resumes with zero ambiguity. Inspired by oh-my-pi's /handoff." />
+<meta property="og:title" content="handoff — the doc your next agent opens before it works" />
+<meta property="og:description" content="Compact a long-running session into one structured handoff file so a fresh-context agent resumes with zero ambiguity. A Claude Code skill, inspired by oh-my-pi." />
+<meta property="og:type" content="website" />
+<meta name="color-scheme" content="light" />
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600&family=Newsreader:ital,opsz,wght@0,6..72,400;0,6..72,500;1,6..72,400&family=JetBrains+Mono:wght@400;500&family=Noto+Sans+KR:wght@400;500;700&display=swap" rel="stylesheet" />
+<style>
+  :root{
+    --paper:#f4f1ea; --paper-2:#efeae0; --ink:#1c1a16; --ink-soft:#4a463d;
+    --line:#d8d1c2; --accent:#b4452f; --accent-soft:#e7d3c7; --gold:#9a7b2e;
+    --mono:"JetBrains Mono",ui-monospace,SFMono-Regular,Menlo,monospace;
+    --serif:"Newsreader",Georgia,serif; --display:"Fraunces",Georgia,serif;
+    --maxw:1080px;
+  }
+  *{box-sizing:border-box}
+  html{scroll-behavior:smooth}
+  body{
+    margin:0; background:var(--paper); color:var(--ink);
+    font-family:var(--serif); font-size:18px; line-height:1.6;
+    -webkit-font-smoothing:antialiased;
+    background-image:
+      linear-gradient(var(--line) 1px,transparent 1px),
+      linear-gradient(90deg,var(--line) 1px,transparent 1px);
+    background-size:32px 32px;
+    background-position:center top;
+  }
+  body::before{
+    content:""; position:fixed; inset:0; pointer-events:none; z-index:0;
+    background:radial-gradient(ellipse at 50% -10%,rgba(180,69,47,.06),transparent 60%);
+  }
+  body[lang="ko"]{font-family:"Noto Sans KR",sans-serif}
+  body[lang="ko"] .display,body[lang="ko"] h1,body[lang="ko"] h2,body[lang="ko"] h3{font-family:"Noto Sans KR",sans-serif}
+  .wrap{max-width:var(--maxw); margin:0 auto; padding:0 24px; position:relative; z-index:1}
+  a{color:inherit}
+  .display{font-family:var(--display)}
+  code,kbd,.mono{font-family:var(--mono)}
+
+  /* header */
+  header{position:sticky; top:0; z-index:20; backdrop-filter:blur(8px);
+    background:rgba(244,241,234,.82); border-bottom:1px solid var(--line)}
+  .bar{display:flex; align-items:center; justify-content:space-between; height:62px}
+  .brand{display:flex; align-items:center; gap:10px; font-family:var(--display); font-weight:600; font-size:20px; letter-spacing:-.01em}
+  .brand .dot{width:11px; height:11px; background:var(--accent); display:inline-block; transform:rotate(45deg); border-radius:2px}
+  nav{display:flex; align-items:center; gap:22px; font-size:15px}
+  nav a{text-decoration:none; color:var(--ink-soft); border-bottom:1px solid transparent; padding-bottom:2px}
+  nav a:hover{color:var(--ink); border-color:var(--accent)}
+  .langtog{font-family:var(--mono); font-size:12.5px; border:1px solid var(--line); background:var(--paper-2);
+    border-radius:999px; padding:5px 4px; display:inline-flex; gap:2px; cursor:pointer}
+  .langtog button{font:inherit; border:0; background:transparent; color:var(--ink-soft); padding:3px 9px; border-radius:999px; cursor:pointer}
+  .langtog button[aria-pressed="true"]{background:var(--ink); color:var(--paper)}
+  @media(max-width:680px){nav .navlink{display:none}}
+
+  /* hero */
+  .hero{padding:84px 0 64px}
+  .eyebrow{font-family:var(--mono); font-size:12.5px; letter-spacing:.18em; text-transform:uppercase; color:var(--accent); margin:0 0 22px}
+  h1{font-family:var(--display); font-weight:500; font-size:clamp(40px,7vw,76px); line-height:1.02; letter-spacing:-.02em; margin:0 0 24px}
+  h1 em{font-style:italic; color:var(--accent)}
+  .lede{font-size:clamp(19px,2.2vw,23px); color:var(--ink-soft); max-width:30em; margin:0 0 34px}
+  .ctas{display:flex; gap:14px; flex-wrap:wrap; align-items:center}
+  .btn{display:inline-flex; align-items:center; gap:8px; font-family:var(--mono); font-size:14px; text-decoration:none;
+    padding:12px 20px; border-radius:8px; border:1px solid var(--ink)}
+  .btn.primary{background:var(--ink); color:var(--paper)}
+  .btn.primary:hover{background:var(--accent); border-color:var(--accent)}
+  .btn.ghost{background:transparent; color:var(--ink)}
+  .btn.ghost:hover{border-color:var(--accent); color:var(--accent)}
+
+  /* pipeline strip */
+  .pipe{margin-top:54px; border:1px solid var(--line); background:var(--paper-2); border-radius:12px; padding:22px 20px}
+  .pipe .lab{font-family:var(--mono); font-size:11.5px; letter-spacing:.16em; text-transform:uppercase; color:var(--ink-soft); margin-bottom:14px}
+  .chips{display:flex; align-items:center; flex-wrap:wrap; gap:10px}
+  .chip{font-family:var(--mono); font-size:13.5px; background:var(--paper); border:1px solid var(--line); border-radius:999px; padding:7px 15px}
+  .chip b{color:var(--accent); font-weight:500}
+  .arrow{color:var(--ink-soft); font-family:var(--mono)}
+
+  /* sections */
+  section{padding:66px 0; border-top:1px solid var(--line)}
+  .kicker{font-family:var(--mono); font-size:12.5px; letter-spacing:.16em; text-transform:uppercase; color:var(--accent); margin:0 0 10px}
+  h2{font-family:var(--display); font-weight:500; font-size:clamp(28px,4.4vw,40px); letter-spacing:-.015em; margin:0 0 30px; line-height:1.1}
+  h2 .n{color:var(--line); font-variant-numeric:tabular-nums; margin-right:14px}
+
+  .grid3{display:grid; grid-template-columns:repeat(3,1fr); gap:18px}
+  .grid4{display:grid; grid-template-columns:repeat(4,1fr); gap:16px}
+  @media(max-width:820px){.grid3,.grid4{grid-template-columns:1fr 1fr}}
+  @media(max-width:520px){.grid3,.grid4{grid-template-columns:1fr}}
+  .card{background:var(--paper-2); border:1px solid var(--line); border-radius:12px; padding:22px}
+  .card h3{font-family:var(--display); font-weight:600; font-size:19px; margin:0 0 8px}
+  .card p{margin:0; font-size:15.5px; color:var(--ink-soft)}
+  .step .num{font-family:var(--mono); font-size:12px; color:var(--accent); letter-spacing:.1em}
+  .step h3{margin-top:8px}
+
+  /* template details */
+  .sets{columns:2; column-gap:18px}
+  @media(max-width:680px){.sets{columns:1}}
+  details{background:var(--paper-2); border:1px solid var(--line); border-radius:10px; padding:4px 16px; margin:0 0 14px; break-inside:avoid}
+  details summary{cursor:pointer; list-style:none; font-family:var(--display); font-weight:600; font-size:16.5px; padding:11px 0; display:flex; align-items:center; gap:10px}
+  details summary::-webkit-details-marker{display:none}
+  details summary::before{content:"+"; font-family:var(--mono); color:var(--accent); font-size:16px}
+  details[open] summary::before{content:"–"}
+  details p{margin:0 0 14px; padding-left:24px; font-size:15px; color:var(--ink-soft)}
+
+  /* terminal */
+  .term{background:#1c1a16; color:#e9e3d5; border-radius:12px; padding:20px 22px; font-family:var(--mono); font-size:14px; line-height:1.7; overflow:auto}
+  .term .c{color:#8aa; }
+  .term .p{color:#c98; }
+  .term .o{color:#9c8; }
+  .pills{display:flex; flex-wrap:wrap; gap:10px; margin-top:18px}
+  .pill{font-family:var(--mono); font-size:13px; background:var(--paper-2); border:1px solid var(--line); border-radius:999px; padding:7px 14px; color:var(--ink-soft)}
+  .pill b{color:var(--accent); font-weight:500}
+  .note{font-size:15px; color:var(--ink-soft); margin-top:18px}
+
+  /* example output */
+  .doc{background:#fbf9f3; border:1px solid var(--line); border-radius:12px; padding:24px 26px; font-family:var(--mono); font-size:13px; line-height:1.7; white-space:pre-wrap; overflow:auto; box-shadow:0 1px 0 #fff inset}
+  .doc .h{color:var(--accent); font-weight:500}
+  .doc .dim{color:var(--ink-soft)}
+  .doc .ok{color:#3a7d3a}
+  .doc .warn{color:#9a7b2e}
+
+  footer{border-top:1px solid var(--line); padding:48px 0 70px}
+  footer p{font-size:15px; color:var(--ink-soft); margin:0 0 12px}
+  footer a{color:var(--accent); text-decoration:none}
+  footer a:hover{text-decoration:underline}
+  .credit{font-size:14px; max-width:46em}
+
+  .reveal{opacity:0; transform:translateY(16px); transition:opacity .6s ease,transform .6s ease}
+  .reveal.in{opacity:1; transform:none}
+  @media(prefers-reduced-motion:reduce){.reveal{opacity:1; transform:none; transition:none}}
+</style>
+</head>
+<body lang="en">
+<header>
+  <div class="wrap bar">
+    <a class="brand" href="#top" style="text-decoration:none"><span class="dot"></span>handoff</a>
+    <nav>
+      <a class="navlink i18n" data-ko="작동 원리" href="#how">How it works</a>
+      <a class="navlink i18n" data-ko="템플릿" href="#template">Template</a>
+      <a class="navlink i18n" data-ko="설치" href="#install">Install</a>
+      <span class="langtog" role="group" aria-label="language">
+        <button data-lang="en" aria-pressed="true">EN</button>
+        <button data-lang="ko" aria-pressed="false">한국어</button>
+      </span>
+    </nav>
+  </div>
+</header>
+
+<main id="top" class="wrap">
+  <!-- HERO -->
+  <section class="hero" style="border-top:0">
+    <p class="eyebrow i18n" data-ko="클로드 코드 스킬 · OH-MY-PI 기반">Claude Code skill · oh-my-pi inspired</p>
+    <h1 class="i18n" data-ko="작업은 넘기되, <em>맥락은 잃지 마세요.</em>">Hand off the work, <em>not the context loss.</em></h1>
+    <p class="lede i18n" data-ko="세션이 길어지면 handoff가 중요한 모든 것을 하나의 구조화된 마크다운 파일로 압축합니다 — 목표, 끝낸 일, 남은 일, 정확히 다음에 할 행동. 그래서 빈 컨텍스트의 새 에이전트가 모호함 없이 이어받습니다.">When a session runs long, handoff compacts everything that matters into one structured markdown file — objective, what's done, what's left, the exact next action — so a fresh-context agent resumes with zero ambiguity.</p>
+    <div class="ctas">
+      <a class="btn primary i18n" data-ko="설치하기" href="#install">Install</a>
+      <a class="btn ghost" href="https://github.com/cskwork/agent-handoff">View on GitHub →</a>
+    </div>
+    <div class="pipe reveal">
+      <div class="lab i18n" data-ko="파이프라인">Pipeline</div>
+      <div class="chips">
+        <span class="chip"><b>1</b> gather state</span><span class="arrow">→</span>
+        <span class="chip"><b>2</b> structure</span><span class="arrow">→</span>
+        <span class="chip"><b>3</b> write file</span><span class="arrow">→</span>
+        <span class="chip"><b>4</b> verify</span><span class="arrow">→</span>
+        <span class="chip"><b>5</b> resume</span>
+      </div>
+    </div>
+  </section>
+
+  <!-- 01 WHAT -->
+  <section id="what">
+    <p class="kicker i18n" data-ko="이게 하는 일">What it does</p>
+    <h2 class="i18n" data-ko="<span class='n'>01</span>아이디어가 아니라, 인계물입니다."><span class="n">01</span>An artifact, not an intention.</h2>
+    <div class="grid3">
+      <div class="card reveal">
+        <h3 class="i18n" data-ko="감(感)이 아닌 정확한 상태">Captures exact state, not vibes</h3>
+        <p class="i18n" data-ko="실제 파일 경로, 명령어, 테스트 결과, 에러 텍스트. 읽은/수정한 파일 집합은 기억이 아니라 도구 사용 이력에서 기계적으로 도출합니다.">Real file paths, commands, test results, error text. The read/modified file sets are derived mechanically from tool history, never from recall.</p>
+      </div>
+      <div class="card reveal">
+        <h3 class="i18n" data-ko="콜드 리줌 실패를 방어">Defends cold-resume failures</h3>
+        <p class="i18n" data-ko="명시적인 '다시 하지 말 것' 완료 목록, 정확히 하나의 다음 단계, 그리고 사용자의 미해결 질문을 원문 그대로 보존.">An explicit DO-NOT-REDO done list, a single exact next step, and any pending user question preserved verbatim.</p>
+      </div>
+      <div class="card reveal">
+        <h3 class="i18n" data-ko="붙여넣기 가능 + 연결 가능">Paste-ready & chainable</h3>
+        <p class="i18n" data-ko="handoffs/handoff-&lt;타임스탬프&gt;.md 파일을 쓰고, 새 대화에 붙여넣을 &lt;handoff-context&gt; 블록을 출력합니다. 각 문서는 이전 문서로 연결됩니다.">Writes handoffs/handoff-&lt;timestamp&gt;.md and emits a &lt;handoff-context&gt; block to paste into a fresh chat; each doc links to its predecessor.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- 02 HOW -->
+  <section id="how">
+    <p class="kicker i18n" data-ko="작동 원리">How it works</p>
+    <h2 class="i18n" data-ko="<span class='n'>02</span>모으고 → 구조화하고 → 쓰고 → 검증한다."><span class="n">02</span>Gather → structure → write → verify.</h2>
+    <div class="grid4">
+      <div class="card step reveal">
+        <div class="num">STEP 1</div>
+        <h3 class="i18n" data-ko="모으기">Gather</h3>
+        <p class="i18n" data-ko="대화·도구 이력을 훑어 읽은/수정한 파일 집합을 도출하고, 읽기 전용 git·테스트 프로브를 실행.">Scan transcript + tool history, derive read/modified sets, run read-only git/test probes.</p>
+      </div>
+      <div class="card step reveal">
+        <div class="num">STEP 2</div>
+        <h3 class="i18n" data-ko="구조화">Structure</h3>
+        <p class="i18n" data-ko="고정 템플릿을 채움. 'Current State'를 맨 앞에, 완료 항목은 '다시 하지 말 것'으로 표시.">Fill the fixed template — Current State first, Done labeled DO NOT REDO.</p>
+      </div>
+      <div class="card step reveal">
+        <div class="num">STEP 3</div>
+        <h3 class="i18n" data-ko="쓰기">Write</h3>
+        <p class="i18n" data-ko="handoffs/handoff-&lt;UTC&gt;.md 저장, 핸드오프 체인 링크 기입. 이전 문서가 있으면 병합.">Save handoffs/handoff-&lt;UTC&gt;.md, fill the Handoff Chain link; merge a prior handoff if present.</p>
+      </div>
+      <div class="card step reveal">
+        <div class="num">STEP 4</div>
+        <h3 class="i18n" data-ko="검증">Verify</h3>
+        <p class="i18n" data-ko="품질 체크리스트 실행: 비밀값 없음, 미완성 자리표시자 없음, 붙여넣기용 검증 명령 포함, 미해결 질문 보존.">Run the quality checklist: no secrets, no placeholders, copy-paste verify commands, open question preserved.</p>
+      </div>
+    </div>
+    <p class="note i18n" data-ko="기본은 도구를 끈 단일 추론 패스 — 군더더기 없는 순수한 글쓰기입니다.">Default to a single reasoning pass with tools off — pure writing, no busywork.</p>
+  </section>
+
+  <!-- 03 TEMPLATE -->
+  <section id="template">
+    <p class="kicker i18n" data-ko="템플릿 구성">Template sections</p>
+    <h2 class="i18n" data-ko="<span class='n'>03</span>새 에이전트가 매번 같은 자리에서 같은 것을 찾도록."><span class="n">03</span>Every part, always in the same place.</h2>
+    <div class="sets">
+      <details open><summary class="i18n" data-ko="Current State (먼저 읽기)">Current State (read this first)</summary><p class="i18n" data-ko="지금 이 순간 참인 것 한 단락 + 현재 블로커. 가장 우선순위가 높아 맨 앞에 두어 '어디까지 했더라' 비용을 없앱니다.">One paragraph of what is true right now plus the active blocker; placed first to kill the "where was I" cost.</p></details>
+      <details><summary class="i18n" data-ko="Metadata">Metadata</summary><p class="i18n" data-ko="프로젝트 경로, git 브랜치 + HEAD 커밋, 트리 clean/dirty, 에이전트/모델 — 작업 시작 전에 신선도를 판단할 수 있도록.">Project path, git branch + HEAD, clean/dirty tree, agent/model — so staleness is detectable before any work.</p></details>
+      <details><summary class="i18n" data-ko="Goal">Goal</summary><p class="i18n" data-ko="사용자가 달성하려는 구체적이고 측정 가능한 목표.">The specific, measurable objective the user is trying to accomplish.</p></details>
+      <details><summary class="i18n" data-ko="Constraints & Preferences">Constraints & Preferences</summary><p class="i18n" data-ko="이어받는 에이전트가 지켜야 할 제약·요구·선호 사항.">Constraints, requirements, and stated preferences the resuming agent must honor.</p></details>
+      <details><summary class="i18n" data-ko="Progress">Progress</summary><p class="i18n" data-ko="세 묶음 — Done(다시 하지 말 것, 정량화, 증거 포함), In Progress, Pending(영향도순) — 완료 작업의 중복을 방지.">Three buckets — Done (DO NOT REDO, quantified, with evidence), In Progress, Pending (ranked by impact) — so finished work is never duplicated.</p></details>
+      <details><summary class="i18n" data-ko="Immediate Next Step">Immediate Next Step</summary><p class="i18n" data-ko="정확히 취할 단 하나의 첫 행동. 어디서 시작할지 모호함을 제거.">The single exact first action to take, removing all ambiguity about where to start.</p></details>
+      <details><summary class="i18n" data-ko="Key Decisions">Key Decisions</summary><p class="i18n" data-ko="각 결정과 그 근거(왜)를 함께. 이어받는 에이전트가 합의된 선택을 다시 논쟁하거나 뒤집지 않도록.">Each decision paired with its rationale, so settled choices are not relitigated or silently reversed.</p></details>
+      <details><summary class="i18n" data-ko="Files / Areas Touched">Files / Areas Touched</summary><p class="i18n" data-ko="변경 목적과 함께한 파일 + 도구 이력에서 도출한 &lt;read-files&gt;/&lt;modified-files&gt; 태그로 실제 영향 범위를 표시.">Files with purpose-of-change, plus mechanically-derived &lt;read-files&gt;/&lt;modified-files&gt; tags showing the real blast radius.</p></details>
+      <details><summary class="i18n" data-ko="Key Patterns / Conventions">Key Patterns / Conventions</summary><p class="i18n" data-ko="이 코드베이스에서 발견한 비자명한 관례·패턴 — 기존 스타일을 맞추도록.">Non-obvious conventions discovered in this codebase, so the resuming agent matches existing style.</p></details>
+      <details><summary class="i18n" data-ko="Gotchas / Landmines">Gotchas / Landmines</summary><p class="i18n" data-ko="알려진 함정과 우회법 — 새 에이전트가 같은 지뢰를 다시 밟지 않도록.">Known traps and their workarounds, to prevent the resuming agent from re-hitting them.</p></details>
+      <details><summary class="i18n" data-ko="Verification">Verification</summary><p class="i18n" data-ko="붙여넣기용 빌드/테스트/린트 명령 + 정상 결과의 모습. 새 에이전트가 상태를 빠르게 확인.">Copy-pasteable build/test/lint commands plus the expected healthy result, to confirm state fast.</p></details>
+      <details><summary class="i18n" data-ko="Open Questions (원문 보존)">Open Questions (verbatim)</summary><p class="i18n" data-ko="미해결 사용자/호출자 질문을 한 글자도 바꾸지 않고 보존 — 가장 자주 누락되는 가장 중요한 항목.">Any unanswered user/caller question, preserved word-for-word — the most resumption-critical, most-failed item.</p></details>
+      <details><summary class="i18n" data-ko="Handoff Chain">Handoff Chain</summary><p class="i18n" data-ko="선행 핸드오프로의 continues-from 링크와 이 문서 자신의 경로 — 지속적인 감사 추적을 형성.">A continues-from link to the predecessor handoff and this doc's own path, forming a durable audit trail.</p></details>
+    </div>
+  </section>
+
+  <!-- 04 INSTALL -->
+  <section id="install">
+    <p class="kicker i18n" data-ko="설치">Install</p>
+    <h2 class="i18n" data-ko="<span class='n'>04</span>클론하고, 심볼릭 링크하면 끝."><span class="n">04</span>Clone, symlink, done.</h2>
+    <div class="term">
+<span class="c"># clone the public repo</span>
+<span class="p">$</span> git clone https://github.com/cskwork/agent-handoff.git
+<span class="c"># make it a Claude Code skill</span>
+<span class="p">$</span> ln -s "$PWD/agent-handoff" ~/.claude/skills/handoff
+<span class="o">✓ skill "handoff" available</span>
+    </div>
+    <div class="pills">
+      <span class="pill i18n" data-ko="<b>~80% 컨텍스트</b>에서 자동 트리거">auto-triggers at <b>~80% context</b></span>
+      <span class="pill">or say: <b>create a handoff</b> / <b>핸드오프 만들어</b></span>
+      <span class="pill i18n" data-ko="Codex·Gemini: <b>SKILL.md</b>를 가리키게">Codex / Gemini: point at <b>SKILL.md</b></span>
+    </div>
+    <p class="note i18n" data-ko="명시적으로 'create a handoff'로 부르거나, 마일스톤·파일 5개 이상 수정 시 자동 실행되게 두세요. 출력은 작업 프로젝트의 handoffs/ 에 생성됩니다.">Invoke it explicitly with "create a handoff", or let it trigger on a milestone or after 5+ edits. Output lands in handoffs/ in your working project.</p>
+  </section>
+
+  <!-- 05 EXAMPLE -->
+  <section id="example">
+    <p class="kicker i18n" data-ko="예시 출력">Example output</p>
+    <h2 class="i18n" data-ko="<span class='n'>05</span>아이디어가 아니라 실제 산출물을 보세요."><span class="n">05</span>See the artifact, not just the idea.</h2>
+    <div class="doc"><span class="h"># Handoff — JWT refresh-token endpoint</span>
+<span class="dim">&gt; Generated: 2026-05-30T12-00-00-000Z · Continues from: none</span>
+
+<span class="h">## Current State (read this first)</span>
+The /auth/refresh endpoint is wired and compiles. Happy-path works; the
+failing piece is rotation. <span class="warn">30/90 auth tests pass; 3 rotation tests fail.</span>
+- Blocking right now: revokeToken() is a no-op stub.
+
+<span class="h">## Progress</span>
+### Done — DO NOT REDO (4 of 6 slices)
+<span class="ok">- [x]</span> issueRefreshToken() at src/auth/tokens.ts:54 — verified
+<span class="ok">- [x]</span> POST /auth/refresh handler at src/auth/routes.ts:88
+
+<span class="h">## Immediate Next Step</span>
+Implement revokeToken(hash) at src/auth/tokens.ts:72, then call it after the
+new pair is issued (src/auth/routes.ts:101). Run: npm test src/auth/rotation.test.ts
+
+<span class="h">## Open Questions (preserve verbatim)</span>
+- User asked: "should a reused refresh token revoke the whole session,
+  or just 409?" — not yet answered.</div>
+    <p class="note"><a href="https://github.com/cskwork/agent-handoff/tree/main/examples" style="color:var(--accent);text-decoration:none">examples/ →</a> <span class="i18n" data-ko="저장소에서 코딩·디버깅 전체 예시를 확인하세요.">full coding + debugging examples in the repo.</span></p>
+  </section>
+</main>
+
+<footer class="wrap">
+  <p><a href="https://github.com/cskwork/agent-handoff">github.com/cskwork/agent-handoff</a> · MIT</p>
+  <p class="credit i18n" data-ko="파이프라인과 문서 구조는 oh-my-pi의 /handoff(Goal / Constraints / Progress / Key Decisions / Critical Context / Next Steps)와 &lt;handoff-context&gt; 재주입 래퍼에서 영감을 받았습니다.">Pipeline and document structure inspired by <a href="https://github.com/can1357/oh-my-pi">oh-my-pi</a>'s /handoff (Goal / Constraints / Progress / Key Decisions / Critical Context / Next Steps) and its &lt;handoff-context&gt; re-injection wrapper.</p>
+</footer>
+
+<script>
+(function(){
+  // capture EN baseline, then i18n swap
+  var nodes = document.querySelectorAll('.i18n');
+  nodes.forEach(function(el){ el.dataset.en = el.innerHTML; });
+  function setLang(lang){
+    document.body.setAttribute('lang', lang);
+    nodes.forEach(function(el){
+      var v = lang === 'ko' ? el.dataset.ko : el.dataset.en;
+      if (v != null) el.innerHTML = v;
+    });
+    document.querySelectorAll('.langtog button').forEach(function(b){
+      b.setAttribute('aria-pressed', String(b.dataset.lang === lang));
+    });
+    try { localStorage.setItem('ah-lang', lang); } catch(e){}
+  }
+  document.querySelectorAll('.langtog button').forEach(function(b){
+    b.addEventListener('click', function(){ setLang(b.dataset.lang); });
+  });
+  var saved = null;
+  try { saved = localStorage.getItem('ah-lang'); } catch(e){}
+  var initial = saved || ((navigator.language||'').toLowerCase().indexOf('ko') === 0 ? 'ko' : 'en');
+  setLang(initial);
+
+  // reveal on scroll
+  if ('IntersectionObserver' in window){
+    var io = new IntersectionObserver(function(entries){
+      entries.forEach(function(en){ if (en.isIntersecting){ en.target.classList.add('in'); io.unobserve(en.target); } });
+    }, { threshold:.12 });
+    document.querySelectorAll('.reveal').forEach(function(el){ io.observe(el); });
+  } else {
+    document.querySelectorAll('.reveal').forEach(function(el){ el.classList.add('in'); });
+  }
+})();
+</script>
+</body>
+</html>
