@@ -25,33 +25,14 @@ Automatic/threshold trigger (context near full): also append the auto-continue n
 **gather → structure → write → verify → resume**. Full detail in
 [ref/pipeline.md](ref/pipeline.md). Do NOT continue the task; produce only the artifact.
 
-0. **Preflight guard.** If essentially nothing has happened (trivial conversation, <2 real
-   exchanges), say "Nothing to hand off yet" and stop. Never fabricate progress.
-1. **Gather state mechanically, not from memory.** Derive the read-set and modified-set from your
-   own tool history; collect commands run, test/build/lint output and error text verbatim. Confirm
-   live state with read-only probes: `git rev-parse --abbrev-ref HEAD`, `git rev-parse --short HEAD`,
-   `git status --porcelain`. Never trust recall for paths, symbol names, or numbers.
-2. **Preserve the open thread.** Capture any unanswered user question or pending request VERBATIM —
-   this is the most resumption-critical and most-failed item. Put it in Open Questions (and in
-   Current State if it blocks the next step).
-3. **Structure into the fixed template.** Fill [ref/templates/handoff.md](ref/templates/handoff.md)
-   in order. Lead with Current State. Label finished work "DO NOT REDO" with quantified progress
-   (e.g. "30/90 tests passing"). Reduce next steps to ONE exact first action. Pair every decision
-   with its rationale. Use real file:line, symbol names, exact commands, real error text.
-4. **Self-verify.** Run [ref/checklists/quality.md](ref/checklists/quality.md). Reject the draft if
-   it leaks secrets, has unfilled `{{...}}`/`[TODO]`, is vague instead of concrete, lacks
-   copy-paste verification commands, or drops a preserved open question. Fix, then continue.
-5. **Write the file.** Save to `handoffs/handoff-<UTC-timestamp>.md` in the working project (ISO
-   8601 with `:` and `.` replaced by `-`, e.g. `handoffs/handoff-2026-05-30T12-00-00-000Z.md`).
-   Create `handoffs/` if missing. If a prior handoff exists, fill the Handoff Chain link and merge:
-   keep all prior info, promote In Progress → Done, refresh Next Steps and stale questions.
-6. **Emit the resume primitive + report.** Print the absolute saved path and a one-line summary,
-   then the ready-to-paste block — the document wrapped in `<handoff-context>` … `</handoff-context>`
-   followed by: `The above is a handoff document from a previous session. Use this context to
-   continue the work seamlessly.`
-7. **(Automatic trigger only)** Append the auto-continue note: the resuming agent must honor the
-   user's LATEST intent over older recorded plans, and say so briefly if nothing remains rather
-   than inventing busywork.
+0. **Preflight.** If essentially nothing happened, say "Nothing to hand off yet" and stop — never fabricate.
+1. **Gather mechanically.** Derive read/modified sets from tool history; capture commands, test output, and error text verbatim; confirm git branch/HEAD/dirty via read-only probes. Never trust recall.
+2. **Preserve the open thread.** Capture any unanswered user question VERBATIM (the most-failed item) → Open Questions, and Current State if it blocks the next step.
+3. **Structure.** Fill `ref/templates/handoff.md` in order: Current State first; Done labeled "DO NOT REDO" + quantified; ONE next step; decisions with rationale; concrete file:line / commands / real errors.
+4. **Self-verify.** Run `ref/checklists/quality.md`; fix any secret, placeholder, vagueness, missing verify command, or dropped open question before writing.
+5. **Write.** Save `handoffs/handoff-<UTC>.md` in the working project (ISO 8601, `:`/`.` → `-`); chain and merge a prior handoff if one exists.
+6. **Emit + report.** Print the path + a one-line summary, then the doc wrapped in `<handoff-context>…</handoff-context>` (exact wrapper in [ref/pipeline.md](ref/pipeline.md)) as the paste-ready resume block.
+7. **(Auto trigger only)** Add the auto-continue note: honor the user's LATEST intent; say so if nothing remains.
 
 ## Reference files
 
