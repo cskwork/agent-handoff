@@ -1,6 +1,6 @@
 ---
 name: handoff
-description: Writes a structured markdown handoff file so a fresh-context agent can resume a long-running task with zero ambiguity — objective, what's done, what's left, key decisions, the exact next step, and how to verify. Use at ~80% context, on milestone or session end, after many edits, or when asked to "create a handoff", "save state", "next plan of action", "hand off to a new agent" / "핸드오프 만들어", "지금까지 한 거 정리해", "이어서 작업하게 정리해줘".
+description: Writes a structured markdown handoff file so a fresh-context agent can resume a long-running task — objective, progress, key decisions, the exact next step, and how to verify. Use near the context limit, at a milestone or session end, or when asked to create a handoff / save state / "핸드오프 만들어".
 ---
 
 # handoff
@@ -9,23 +9,20 @@ Write the document your next agent opens before it works. A handoff compacts eve
 matters about a long-running task into one structured markdown file, so an agent with an empty
 context window resumes exactly where you left off — without re-reading the conversation.
 
-Inspired by [oh-my-pi](https://github.com/can1357/oh-my-pi)'s `/handoff` pipeline. The key
-adaptation: oh-my-pi can fork an in-process session, so its manual `/handoff` re-injects context
-without a file. A skill has no session-forking primitive, so this skill **always writes a markdown
-file** as the durable cross-agent transport, and **also** emits a paste-ready resume block.
+This skill **always writes a markdown file** as the durable cross-agent transport, and **also**
+emits a paste-ready resume block you can drop into a fresh chat.
 
 ## When to use
 
 Trigger on any of: context window ~80%+ full · a milestone or work session ending · after 5+ file
-edits · the user asks for a handoff / state save / "next plan of action" (see description for the
-full English + Korean trigger phrases).
+edits · the user asks for a handoff / state save / "next plan of action".
 
 Manual trigger (user present, steering): just write the file.
 Automatic/threshold trigger (context near full): also append the auto-continue note (step 7).
 
 ## Pipeline (summary)
 
-Mirror oh-my-pi: **gather → structure → write → verify → resume**. Full detail in
+**gather → structure → write → verify → resume**. Full detail in
 [ref/pipeline.md](ref/pipeline.md). Do NOT continue the task; produce only the artifact.
 
 0. **Preflight guard.** If essentially nothing has happened (trivial conversation, <2 real
