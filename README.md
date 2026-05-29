@@ -33,13 +33,16 @@ Pipeline and document structure are inspired by [oh-my-pi](https://github.com/ca
    open question preserved).
 5. **Resume** — print the path + the `<handoff-context>` resume block.
 
-Full detail: [`ref/pipeline.md`](ref/pipeline.md).
+Full detail: [`handoff/ref/pipeline.md`](handoff/ref/pipeline.md).
 
 ## Install
 
+The skill lives in the `handoff/` folder so the skill directory name matches the skill name.
+
 ```bash
 git clone https://github.com/cskwork/agent-handoff.git
-ln -s "$PWD/agent-handoff" ~/.claude/skills/handoff
+ln -s "$PWD/agent-handoff/handoff" ~/.claude/skills/handoff   # Claude Code
+ln -s "$PWD/agent-handoff/handoff" ~/.codex/skills/handoff    # Codex
 ```
 
 Then in Claude Code, the skill auto-triggers near ~80% context, on milestones, or after 5+ edits —
@@ -48,20 +51,20 @@ or invoke it explicitly:
 > create a handoff · 핸드오프 만들어 · summarize where we left off · next plan of action
 
 Output lands in `handoffs/` in your working project. Other agents (Codex, Gemini) can use it too —
-point them at `SKILL.md`.
+point them at `handoff/SKILL.md`.
 
 ## Layout
 
 ```
-SKILL.md                      lean skill entry (frontmatter + pipeline summary)
-ref/
-  pipeline.md                 full pipeline + cold-resume failure-mode table
-  templates/handoff*.md       general / coding / debugging templates
-  checklists/quality.md       authoring self-verification gate
-  checklists/resume.md        what the receiving agent does first
-scripts/check-staleness.sh    validate a handoff before trusting it
-examples/                     filled handoffs (coding + debugging)
+handoff/                      the skill (folder name = skill name)
+  SKILL.md                    lean entry (frontmatter + pipeline summary)
+  ref/pipeline.md             full pipeline + cold-resume failure-mode table
+  ref/templates/handoff*.md   general / coding / debugging templates
+  ref/checklists/*.md         authoring gate + receiving-agent checklist
+  scripts/check-staleness.sh  validate a handoff before trusting it
+  examples/                   filled handoffs (coding + debugging)
 docs/index.html               GitHub Pages landing page
+README.md · LICENSE · log/    repo meta
 ```
 
 ## Credit

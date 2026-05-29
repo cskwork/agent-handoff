@@ -1,6 +1,6 @@
 ---
 name: handoff
-description: Compacts a long-running session into a structured, paste-ready handoff document and writes it to a markdown file so a fresh-context agent can resume the task with zero ambiguity — capturing the objective, current state, what is done (with evidence), what is left, key decisions and their rationale, files touched, gotchas, the single exact next action, and how to verify. Use when the context window is filling up (~80%+), a milestone or work session is ending, after 5+ file edits, or when the user says "create a handoff", "save state", "write a handoff doc", "summarize what we did / where we left off", "next plan of action", "hand off to a new agent", "resume from", "continue where we left off" — or in Korean "핸드오프 만들어", "지금까지 한 거 정리해", "다음 작업 계획 정리", "새 에이전트한테 넘겨", "이어서 작업하게 정리해줘", "상태 저장해".
+description: Writes a structured markdown handoff file so a fresh-context agent can resume a long-running task with zero ambiguity — objective, what's done, what's left, key decisions, the exact next step, and how to verify. Use at ~80% context, on milestone or session end, after many edits, or when asked to "create a handoff", "save state", "next plan of action", "hand off to a new agent" / "핸드오프 만들어", "지금까지 한 거 정리해", "이어서 작업하게 정리해줘".
 ---
 
 # handoff

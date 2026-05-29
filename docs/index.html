@@ -249,14 +249,15 @@
     <div class="term">
 <span class="c"># clone the public repo</span>
 <span class="p">$</span> git clone https://github.com/cskwork/agent-handoff.git
-<span class="c"># make it a Claude Code skill</span>
-<span class="p">$</span> ln -s "$PWD/agent-handoff" ~/.claude/skills/handoff
+<span class="c"># link the handoff/ skill folder (Claude Code + Codex)</span>
+<span class="p">$</span> ln -s "$PWD/agent-handoff/handoff" ~/.claude/skills/handoff
+<span class="p">$</span> ln -s "$PWD/agent-handoff/handoff" ~/.codex/skills/handoff
 <span class="o">✓ skill "handoff" available</span>
     </div>
     <div class="pills">
       <span class="pill i18n" data-ko="<b>~80% 컨텍스트</b>에서 자동 트리거">auto-triggers at <b>~80% context</b></span>
       <span class="pill">or say: <b>create a handoff</b> / <b>핸드오프 만들어</b></span>
-      <span class="pill i18n" data-ko="Codex·Gemini: <b>SKILL.md</b>를 가리키게">Codex / Gemini: point at <b>SKILL.md</b></span>
+      <span class="pill i18n" data-ko="Codex·Gemini: <b>handoff/SKILL.md</b>를 가리키게">Codex / Gemini: point at <b>handoff/SKILL.md</b></span>
     </div>
     <p class="note i18n" data-ko="명시적으로 'create a handoff'로 부르거나, 마일스톤·파일 5개 이상 수정 시 자동 실행되게 두세요. 출력은 작업 프로젝트의 handoffs/ 에 생성됩니다.">Invoke it explicitly with "create a handoff", or let it trigger on a milestone or after 5+ edits. Output lands in handoffs/ in your working project.</p>
   </section>
@@ -285,7 +286,7 @@ new pair is issued (src/auth/routes.ts:101). Run: npm test src/auth/rotation.tes
 <span class="h">## Open Questions (preserve verbatim)</span>
 - User asked: "should a reused refresh token revoke the whole session,
   or just 409?" — not yet answered.</div>
-    <p class="note"><a href="https://github.com/cskwork/agent-handoff/tree/main/examples" style="color:var(--accent);text-decoration:none">examples/ →</a> <span class="i18n" data-ko="저장소에서 코딩·디버깅 전체 예시를 확인하세요.">full coding + debugging examples in the repo.</span></p>
+    <p class="note"><a href="https://github.com/cskwork/agent-handoff/tree/main/handoff/examples" style="color:var(--accent);text-decoration:none">examples/ →</a> <span class="i18n" data-ko="저장소에서 코딩·디버깅 전체 예시를 확인하세요.">full coding + debugging examples in the repo.</span></p>
   </section>
 </main>
 

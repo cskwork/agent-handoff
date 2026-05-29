@@ -38,6 +38,19 @@ plus cold-resume best practices.
   reveal-on-scroll), served via GitHub Pages from `/docs` on `main` — mirroring the
   `cskwork/ten-rules-skill` convention.
 
+## Update — nested skill folder + leaner description
+
+- **Moved the skill into a `handoff/` subfolder** (SKILL.md + ref/ + examples/ + scripts/). Repo
+  stays `agent-handoff` (descriptive), but the skill directory name now equals the skill name
+  `handoff` — so the install symlink target's basename matches without renaming the repo. `docs/`,
+  `README.md`, `LICENSE`, `log/` remain at repo root (Pages still serves `/docs`).
+- Repointed global links to the nested folder: `~/.claude/skills/handoff` and
+  `~/.codex/skills/handoff` → `agent-handoff/handoff`.
+- **Shortened the SKILL.md `description`** from ~1.1k to ~480 chars: kept what + when + the core
+  English/Korean trigger phrases for discovery, dropped the exhaustive synonym list.
+- Updated README install/layout and `docs/index.html` install block + examples link to the
+  `handoff/` paths.
+
 ## Research artifact
 
 Synthesis spec produced by the `handoff-skill-research` workflow (oh-my-pi clone at
